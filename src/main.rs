@@ -42,7 +42,7 @@ fn wczytaj_autorstwo() -> Result<Vec<Autorstwo>, String> {
 
     for line in lines.lines() {
 
-        // let (id, tytul, rok, autorzy, punkty ) = get_line_data(line).ok_or(format!("Błąd konwertowania wiersza {}", rows_printed + 1))?;
+        // let (id, tytul, rok, autorzy, punkty ) = get_line_data(line).ok_or(format!("Błąd konwertowania wiersza {}", rows_selected + 1))?;
         let autorstwo = get_autorstwo(line).ok_or(format!("Błąd konwertowania wiersza {}", rows_parsed + 1))?;
         autorstwa.push(autorstwo);
         rows_parsed += 1;
@@ -66,7 +66,7 @@ fn wczytaj_autorow() -> Result<Vec<Autor>, String> {
 
     for line in lines.lines() {
 
-        // let (id, tytul, rok, autorzy, punkty ) = get_line_data(line).ok_or(format!("Błąd konwertowania wiersza {}", rows_printed + 1))?;
+        // let (id, tytul, rok, autorzy, punkty ) = get_line_data(line).ok_or(format!("Błąd konwertowania wiersza {}", rows_selected + 1))?;
         let autor = get_autor(line).ok_or(format!("Błąd konwertowania wiersza {}", rows_parsed + 1))?;
         autorzy.push(autor);
         rows_parsed += 1;
@@ -105,7 +105,7 @@ fn make_query_file_2(autorstwa: &Vec<Autorstwo>, autorzy: &Vec<Autor>, prace: &H
 
     let mut output_file = std::fs::File::create("./assets/Publikacje_2.sql")?;
 
-    writeln!(&mut output_file, 
+    writeln!(&mut output_file,
     "CREATE TABLE autorstwa (
     praca NUMBER(3, 0) NOT NULL,
     autor VARCHAR2(29) NOT NULL,
@@ -124,49 +124,49 @@ CREATE TABLE prace (
     rok NUMBER(4, 0) NOT NULL,
     autorzy NUMBER(2, 0) NOT NULL,
     punkty NUMBER(3, 0) NOT NULL
-);")?;    
+);")?;
 
     writeln!(&mut output_file)?;
 
-    let mut autorstwa_printed = 0;
-    let mut autorzy_printed = 0;
-    let mut prace_printed = 0;
+    let mut autorstwa_selected = 0;
+    let mut autorzy_selected = 0;
+    let mut prace_selected = 0;
 
     for autorstwo in autorstwa {
 
-        writeln!(&mut output_file, "INSERT INTO autorstwa (praca, autor) VALUES ({}, '{}');", 
+        writeln!(&mut output_file, "INSERT INTO autorstwa (praca, autor) VALUES ({}, '{}');",
             autorstwo.praca, autorstwo.autor)?;
-        autorstwa_printed += 1;
+        autorstwa_selected += 1;
     }
 
     writeln!(&mut output_file)?;
 
     for autor in autorzy {
 
-        writeln!(&mut output_file, "INSERT INTO autorzy (autor, ryzyko, sloty) VALUES ('{}', {}, '{}');", 
+        writeln!(&mut output_file, "INSERT INTO autorzy (autor, ryzyko, sloty) VALUES ('{}', {}, '{}');",
             autor.id, autor.ryzyko, autor.sloty)?;
 
-        autorzy_printed += 1;
+        autorzy_selected += 1;
     }
 
     writeln!(&mut output_file)?;
 
     for praca in prace.values() {
 
-        writeln!(&mut output_file, "INSERT INTO prace (id, tytul, rok, autorzy, punkty) VALUES ({}, '{}', {}, {}, {});", 
+        writeln!(&mut output_file, "INSERT INTO prace (id, tytul, rok, autorzy, punkty) VALUES ({}, '{}', {}, {}, {});",
             praca.id, praca.tytul, praca.rok, praca.autorzy, praca.punkty)?;
 
-        prace_printed += 1;
+        prace_selected += 1;
     }
 
-    writeln!(&mut output_file, 
+    writeln!(&mut output_file,
     "
 select distinct A.autor, B.autor as wspolautor FROM autorstwa A, autorstwa B WHERE A.autor in (SELECT autorzy.autor from autorzy WHERE autor NOT IN (SELECT distinct autorstwa.autor FROM autorstwa JOIN prace ON autorstwa.praca = prace.id WHERE rok = 2020) AND ryzyko = 1) AND A.praca = B.praca AND A.autor != B.autor order by A.autor;
-")?;    
+")?;
 
-    assert_eq!(autorstwa_printed, AUTORSTWA_ROZMIAR);
-    assert_eq!(autorzy_printed, AUTORZY_ROZMIAR);
-    assert_eq!(prace_printed, PRACE_ROZMIAR);
+    assert_eq!(autorstwa_selected, AUTORSTWA_ROZMIAR);
+    assert_eq!(autorzy_selected, AUTORZY_ROZMIAR);
+    assert_eq!(prace_selected, PRACE_ROZMIAR);
 
     Ok(())
 }
@@ -188,12 +188,12 @@ fn publikacje_2() -> Result<(), String> {
         for autorstwo in &autorstwa {
 
             if autorstwo.autor != autor.id { continue; }
-                
+
             let praca = prace.get(&autorstwo.praca).ok_or("Brak pracy")?;
             publikacje_autora.push(praca);
 
             if praca.rok == 2020 {
-                
+
                 jest_wybrany = false;
             }
         }
@@ -210,7 +210,7 @@ fn publikacje_2() -> Result<(), String> {
         println!("wybrany: {}", autor);
     }
     println!("liczba wybranych: {}", publikacje.len());
-    
+
     for (autor, publikacje_autora) in publikacje {
 
         let mut wspolpracownicy = HashSet::new();
@@ -242,7 +242,7 @@ fn make_query_file_3(autorstwa: &Vec<Autorstwo>, autorzy: &Vec<Autor>, prace: &H
 
     let mut output_file = std::fs::File::create("./assets/Publikacje_3.sql")?;
 
-    writeln!(&mut output_file, 
+    writeln!(&mut output_file,
     "CREATE TABLE autorstwa (
     praca NUMBER(3, 0) NOT NULL,
     autor VARCHAR2(29) NOT NULL,
@@ -261,49 +261,49 @@ CREATE TABLE prace (
     rok NUMBER(4, 0) NOT NULL,
     autorzy NUMBER(2, 0) NOT NULL,
     punkty NUMBER(3, 0) NOT NULL
-);")?;    
+);")?;
 
     writeln!(&mut output_file)?;
 
-    let mut autorstwa_printed = 0;
-    let mut autorzy_printed = 0;
-    let mut prace_printed = 0;
+    let mut autorstwa_selected = 0;
+    let mut autorzy_selected = 0;
+    let mut prace_selected = 0;
 
     for autorstwo in autorstwa {
 
-        writeln!(&mut output_file, "INSERT INTO autorstwa (praca, autor) VALUES ({}, '{}');", 
+        writeln!(&mut output_file, "INSERT INTO autorstwa (praca, autor) VALUES ({}, '{}');",
             autorstwo.praca, autorstwo.autor)?;
-        autorstwa_printed += 1;
+        autorstwa_selected += 1;
     }
 
     writeln!(&mut output_file)?;
 
     for autor in autorzy {
 
-        writeln!(&mut output_file, "INSERT INTO autorzy (autor, ryzyko, sloty) VALUES ('{}', {}, '{}');", 
+        writeln!(&mut output_file, "INSERT INTO autorzy (autor, ryzyko, sloty) VALUES ('{}', {}, '{}');",
             autor.id, autor.ryzyko, autor.sloty)?;
 
-        autorzy_printed += 1;
+        autorzy_selected += 1;
     }
 
     writeln!(&mut output_file)?;
 
     for praca in prace.values() {
 
-        writeln!(&mut output_file, "INSERT INTO prace (id, tytul, rok, autorzy, punkty) VALUES ({}, '{}', {}, {}, {});", 
+        writeln!(&mut output_file, "INSERT INTO prace (id, tytul, rok, autorzy, punkty) VALUES ({}, '{}', {}, {}, {});",
             praca.id, praca.tytul, praca.rok, praca.autorzy, praca.punkty)?;
 
-        prace_printed += 1;
+        prace_selected += 1;
     }
 
-    writeln!(&mut output_file, 
+    writeln!(&mut output_file,
     "
 select id, autorzy, punkty, (punkty / autorzy) as wartosc from prace order by id;
-")?;    
+")?;
 
-    assert_eq!(autorstwa_printed, AUTORSTWA_ROZMIAR);
-    assert_eq!(autorzy_printed, AUTORZY_ROZMIAR);
-    assert_eq!(prace_printed, PRACE_ROZMIAR);
+    assert_eq!(autorstwa_selected, AUTORSTWA_ROZMIAR);
+    assert_eq!(autorzy_selected, AUTORZY_ROZMIAR);
+    assert_eq!(prace_selected, PRACE_ROZMIAR);
 
     Ok(())
 }
@@ -313,14 +313,14 @@ fn publikacje_3() -> Result<(), String> {
     let autorstwa = wczytaj_autorstwo()?;
     let autorzy = wczytaj_autorow()?;
     let prace = wczytaj_prace()?;
-    let mut lines = 0;
+    let mut inserted = 0;
 
     let mut wartosci = HashMap::new();
     for (id, praca) in &prace {
 
         wartosci.insert(id, praca.punkty as f32 / praca.autorzy as f32);
     }
-    
+
     let mut prace_autora = HashMap::new();
     for autor in &autorzy {
 
@@ -329,33 +329,71 @@ fn publikacje_3() -> Result<(), String> {
 
             if autorstwo.autor == autor.id {
 
-                publikacje.push(autorstwo.praca);
-                lines += 1;
+                let wartosc = wartosci.get(&autorstwo.praca).ok_or("Błąd")?.clone();
+                publikacje.push((autorstwo.praca, wartosc));
+                inserted += 1;
             }
         }
-        
-        prace_autora.insert(autor.id.clone(), publikacje);
+
+        publikacje.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+        let mut wybrane = Vec::new();
+        let mut odrzucone = Vec::new();
+
+        for publikacja in publikacje {
+
+            if wybrane.len() < 4 {
+
+                wybrane.push(publikacja);
+
+            } else {
+
+                odrzucone.push(publikacja);
+            }
+        }
+
+        prace_autora.insert(autor.id.clone(), (wybrane, odrzucone));
     }
 
+    let mut selected = 0;
+    let mut discarded = 0;
+    let mut printed = 0;
     for autor in &autorzy {
 
-        let ids = prace_autora.get(&autor.id).ok_or("Błąd")?;
-        for id in ids {
+        let (wybrane, odrzucone) = prace_autora.get(&autor.id).ok_or("Błąd")?;
+        let mut wynik_autora = 0.;
+        assert!(wybrane.len() <= 4);
+        selected += wybrane.len();
+        discarded += odrzucone.len();
+        for (id, wartosc) in wybrane {
 
-            let wartosc = wartosci.get(&id).ok_or("Błąd")?;
-            println!("autor: {}, praca: {}, wartosc: {}", 
-                autor.id, id, wartosc);
+            wynik_autora += wartosc;
+            // println!("autor: {}, praca: {}, wartosc: {}",
+            //     autor.id, id, wartosc);
+
+            for odrzucona in odrzucone {
+
+                assert!(wartosc.clone() >= odrzucona.1);
+            }
         }
+
+        printed += 1;
+        println!("AUTOR: {}, WYNIK: {}", autor.id, wynik_autora);
     }
 
-    assert_eq!(lines, 628);
-    println!("wypisano: {lines}");
+    assert_eq!(selected + discarded, 628);
+    assert_eq!(inserted, 628);
+    assert_eq!(printed, 125);
+    println!("wybrano: {selected}");
+    println!("odrzucono: {discarded}");
+    println!("total: {}", selected + discarded);
+    println!("wypisano: {printed}");
 
     make_query_file_3(&autorstwa, &autorzy, &prace)
         .map_err(|e| e.to_string())
 }
 
-fn main() -> Result<(), String> {    
+fn main() -> Result<(), String> {
 
     publikacje_3()
 }
@@ -369,7 +407,7 @@ fn get_autorstwo(line: &str) -> Option<Autorstwo> {
 
     match koniec {
         Some(_v) => None,
-        None => Some(Autorstwo { praca: praca, autor: autor })    
+        None => Some(Autorstwo { praca: praca, autor: autor })
     }
 }
 
@@ -412,6 +450,6 @@ fn get_praca(line: &str) -> Option<Praca> {
 
     match koniec {
         Some(_v) => None,
-        None => Some(Praca { id: id, tytul: tytul, rok: rok, autorzy: autorzy, punkty: punkty })    
+        None => Some(Praca { id: id, tytul: tytul, rok: rok, autorzy: autorzy, punkty: punkty })
     }
 }
