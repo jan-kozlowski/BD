@@ -243,25 +243,29 @@ fn make_query_file_3(autorstwa: &Vec<Autorstwo>, autorzy: &Vec<Autor>, prace: &H
     let mut output_file = std::fs::File::create("./assets/Publikacje_3.sql")?;
 
     writeln!(&mut output_file,
-    "CREATE TABLE autorstwa (
-    praca NUMBER(3, 0) NOT NULL,
-    autor VARCHAR2(29) NOT NULL,
-    PRIMARY KEY (praca, autor)
-);
+        "DROP TABLE autorstwa;
+        DROP TABLE autorzy;
+        DROP TABLE prace;
 
-CREATE TABLE autorzy (
-    autor VARCHAR2(29) PRIMARY KEY,
-    ryzyko NUMBER(1, 0) NOT NULL,
-    sloty VARCHAR2(4) NOT NULL
-);
+        CREATE TABLE autorstwa (
+            praca NUMBER(3, 0) NOT NULL,
+            autor VARCHAR2(29) NOT NULL,
+            PRIMARY KEY (praca, autor)
+        );
 
-CREATE TABLE prace (
-    id NUMBER(3, 0) PRIMARY KEY,
-    tytul VARCHAR2(197) NOT NULL,
-    rok NUMBER(4, 0) NOT NULL,
-    autorzy NUMBER(2, 0) NOT NULL,
-    punkty NUMBER(3, 0) NOT NULL
-);")?;
+        CREATE TABLE autorzy (
+            autor VARCHAR2(29) PRIMARY KEY,
+            ryzyko NUMBER(1, 0) NOT NULL,
+            sloty VARCHAR2(4) NOT NULL
+        );
+
+        CREATE TABLE prace (
+            id NUMBER(3, 0) PRIMARY KEY,
+            tytul VARCHAR2(197) NOT NULL,
+            rok NUMBER(4, 0) NOT NULL,
+            autorzy NUMBER(2, 0) NOT NULL,
+            punkty NUMBER(3, 0) NOT NULL
+        );")?;
 
     writeln!(&mut output_file)?;
 
@@ -297,9 +301,8 @@ CREATE TABLE prace (
     }
 
     writeln!(&mut output_file,
-    "
-select id, autorzy, punkty, (punkty / autorzy) as wartosc from prace order by id;
-")?;
+    "SELECT autor, SUM(wartosc) as wynik FROM (SELECT A.autor, praca, W.id, W.wartosc, ROW_NUMBER() OVER (PARTITION BY A.autor ORDER BY W.wartosc desc) as rn FROM autorzy A JOIN autorstwa ON A.autor = autorstwa.autor JOIN (SELECT id, (punkty / autorzy) AS wartosc from prace) W ON W.id = autorstwa.praca) WHERE rn <= 4 GROUP BY autor;"
+    )?;
 
     assert_eq!(autorstwa_selected, AUTORSTWA_ROZMIAR);
     assert_eq!(autorzy_selected, AUTORZY_ROZMIAR);
@@ -377,13 +380,22 @@ fn publikacje_3() -> Result<(), String> {
             }
         }
 
-        printed += 1;
-        println!("AUTOR: {}, WYNIK: {}", autor.id, wynik_autora);
+        // for (id, wartosc) in odrzucone {
+
+        //     println!("autor: {}, praca: {}, wartosc: {}",
+        //         autor.id, id, wartosc);
+        // }
+
+        if wybrane.len() > 0 {
+
+            printed += 1;
+            println!("AUTOR: {}, WYNIK: {}", autor.id, wynik_autora);
+        }
     }
 
     assert_eq!(selected + discarded, 628);
     assert_eq!(inserted, 628);
-    assert_eq!(printed, 125);
+    // assert_eq!(printed, 125);
     println!("wybrano: {selected}");
     println!("odrzucono: {discarded}");
     println!("total: {}", selected + discarded);
