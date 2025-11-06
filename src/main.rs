@@ -243,29 +243,25 @@ fn make_query_file_3(autorstwa: &Vec<Autorstwo>, autorzy: &Vec<Autor>, prace: &H
     let mut output_file = std::fs::File::create("./assets/Publikacje_3.sql")?;
 
     writeln!(&mut output_file,
-        "DROP TABLE autorstwa;
-        DROP TABLE autorzy;
-        DROP TABLE prace;
+        "CREATE TABLE autorstwa (
+    praca NUMBER(3, 0) NOT NULL,
+    autor VARCHAR2(29) NOT NULL,
+    PRIMARY KEY (praca, autor)
+);
 
-        CREATE TABLE autorstwa (
-            praca NUMBER(3, 0) NOT NULL,
-            autor VARCHAR2(29) NOT NULL,
-            PRIMARY KEY (praca, autor)
-        );
+CREATE TABLE autorzy (
+    autor VARCHAR2(29) PRIMARY KEY,
+    ryzyko NUMBER(1, 0) NOT NULL,
+    sloty VARCHAR2(4) NOT NULL
+);
 
-        CREATE TABLE autorzy (
-            autor VARCHAR2(29) PRIMARY KEY,
-            ryzyko NUMBER(1, 0) NOT NULL,
-            sloty VARCHAR2(4) NOT NULL
-        );
-
-        CREATE TABLE prace (
-            id NUMBER(3, 0) PRIMARY KEY,
-            tytul VARCHAR2(197) NOT NULL,
-            rok NUMBER(4, 0) NOT NULL,
-            autorzy NUMBER(2, 0) NOT NULL,
-            punkty NUMBER(3, 0) NOT NULL
-        );")?;
+CREATE TABLE prace (
+    id NUMBER(3, 0) PRIMARY KEY,
+    tytul VARCHAR2(197) NOT NULL,
+    rok NUMBER(4, 0) NOT NULL,
+    autorzy NUMBER(2, 0) NOT NULL,
+    punkty NUMBER(3, 0) NOT NULL
+);")?;
 
     writeln!(&mut output_file)?;
 
@@ -301,7 +297,12 @@ fn make_query_file_3(autorstwa: &Vec<Autorstwo>, autorzy: &Vec<Autor>, prace: &H
     }
 
     writeln!(&mut output_file,
-    "SELECT autor, SUM(wartosc) as wynik FROM (SELECT A.autor, praca, W.id, W.wartosc, ROW_NUMBER() OVER (PARTITION BY A.autor ORDER BY W.wartosc desc) as rn FROM autorzy A JOIN autorstwa ON A.autor = autorstwa.autor JOIN (SELECT id, (punkty / autorzy) AS wartosc from prace) W ON W.id = autorstwa.praca) WHERE rn <= 4 GROUP BY autor;"
+    "
+SELECT autor, SUM(wartosc) as wynik FROM (SELECT A.autor, praca, W.id, W.wartosc, ROW_NUMBER() OVER (PARTITION BY A.autor ORDER BY W.wartosc desc) as rn FROM autorzy A JOIN autorstwa ON A.autor = autorstwa.autor JOIN (SELECT id, (punkty / autorzy) AS wartosc from prace) W ON W.id = autorstwa.praca) WHERE rn <= 4 GROUP BY autor;
+
+DROP TABLE autorzy;
+DROP TABLE autorstwa;
+DROP TABLE prace;"
     )?;
 
     assert_eq!(autorstwa_selected, AUTORSTWA_ROZMIAR);
