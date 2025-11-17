@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    hash::Hash,
     io::{Read, Write},
 };
 
@@ -476,7 +477,7 @@ CREATE TABLE prace (
 
     writeln!(&mut output_file,
     "
-SELECT autor, SUM(wartosc) as wynik FROM (SELECT A.autor, praca, W.id, W.wartosc, ROW_NUMBER() OVER (PARTITION BY A.autor ORDER BY W.wartosc desc) as rn FROM autorzy A JOIN autorstwa ON A.autor = autorstwa.autor JOIN (SELECT id, (punkty / autorzy) AS wartosc from prace) W ON W.id = autorstwa.praca) WHERE rn <= 4 GROUP BY autor;
+SELECT distinct autor, LEVEL-1 FROM autorstwa START WITH autor = 'Pilipczuk Mi' CONNECT BY NOCYCLE PRIOR praca = praca AND PRIOR autor != autor;
 
 DROP TABLE autorzy;
 DROP TABLE autorstwa;
@@ -562,16 +563,39 @@ fn publikacje_4() -> Result<(), String> {
         }
     }
 
+    let mut wyniki = HashMap::new();
+
     for autor in &autorzy {
-        println!(
-            "{}: {}",
-            autor.id,
-            match liczby.get(&autor.id) {
-                None => "NULL",
-                Some(liczba) => &liczba.to_string(),
+        let text = match liczby.get(&autor.id) {
+            None => String::from("NULL"),
+            Some(liczba) => String::from(liczba.to_string()),
+        };
+
+        match wyniki.get(&text) {
+            None => {
+                wyniki.insert(text.clone(), 1);
             }
-        );
+            Some(wynik) => {
+                wyniki.insert(text.clone(), wynik + 1);
+            }
+        }
+
+        println!("{}: {}", autor.id, text);
     }
+
+    println!("---------------------");
+    let null_suma = wyniki.get("NULL").unwrap();
+    println!("NULL: {null_suma}");
+    let mut suma = 0;
+    let mut liczba = 0;
+    while let Some(wynik) = wyniki.get(&liczba.to_string()) {
+        println!("{liczba}: {wynik}");
+        suma += wynik;
+        liczba += 1;
+    }
+
+
+    assert_eq!(null_suma + suma, 125);
 
     make_query_file_4(&autorstwa, &autorzy, &prace).map_err(|e| e.to_string())
 }
